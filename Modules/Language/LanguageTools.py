@@ -2,8 +2,36 @@ from Controllers.Controller import Controller
 from Modules.Language.LanguageInterpreter import LanguageInterpreter, tool
 import requests
 from typing import Callable
+import re
 
 controller_getter: Callable[[None], Controller] = None
+
+def match_string(target, string_list):
+    # Preprocess the target to ignore spaces and underscores
+    target_processed = target.lower().replace(" ", "").replace("_", "")
+    
+    matched_strings = []
+    
+    for string in string_list:
+        # Preprocess each string in the list
+        string_processed = string.lower().replace(" ", "").replace("_", "")
+        
+        # Check for exact match
+        if target_processed == string_processed:
+            matched_strings.append(string)
+            continue
+        
+        # Check for substring match
+        if target_processed in string_processed:
+            matched_strings.append(string)
+            continue
+        
+        # Check for fuzzy match (target as a part of string)
+        if re.search(target_processed, string_processed):
+            matched_strings.append(string)
+            continue
+    
+    return matched_strings
 
 @tool("Returns a list of IDs of objects that are visible to the arm")
 def get_visible_objects() -> list[str]:
@@ -17,7 +45,17 @@ def get_visible_objects_detailed() -> list[str]:
 
 @tool("Makes the arm look at the largest object with the specified label, you must only give a label as returned by get_visible_objects(), will return false if the arm cannot perceive any objects with that label", label="The label of the object to look at")
 def set_look_at_target_label(label: str) -> bool:
-    return controller_getter().set_target_label(label)
+    sucess = controller_getter().set_target_label(label)
+    if not sucess:        
+        visible_objects = get_visible_objects()
+        found_labels = match_string(label, visible_objects)
+        if len(found_labels) > 0:
+            print(f"Could not find object with label '{label}', found objects with labels: {found_labels}")
+            return controller_getter().set_target_label(found_labels[0])
+        else:
+            print(f"Could not find object with label '{label}', found no objects")
+            return False
+    return True
 
 @tool("Returns the label of the object that the arm is currently looking at")
 def get_look_at_target_label() -> str:
