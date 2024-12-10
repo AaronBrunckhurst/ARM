@@ -135,15 +135,15 @@ class Server(ServerBase):
 
     def vison_tar_red(self):
         print("server - Targeting red")        
-        self.controller.set_target_label("Red_object")
+        self.controller.set_target_label("Red object")
 
     def vison_tar_green(self):
         print("server - Targeting green")
-        self.controller.set_target_label("Green_object")
+        self.controller.set_target_label("Green object")
 
     def vison_tar_blue(self):
         print("Targeting blue")
-        self.controller.set_target_label("Blue_object")
+        self.controller.set_target_label("Blue object")
 
     # Placeholder function to control the robotic arm
     def control_robotic_arm(self, command):
